@@ -1,0 +1,47 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below, together with the book whose frameworks it develops."
+title: "FMGCF-EWC: an operational, vulnerability-aware early warning chain for climate-related health risk"
+type: software
+version: "1.0.0"
+date-released: "2026-11-06"
+authors:
+  - family-names: Sargiotis
+    given-names: Dimitrios
+    affiliation: "School of Civil Engineering, National Technical University of Athens"
+    orcid: "https://orcid.org/0009-0006-3644-4561"
+repository-code: "https://github.com/uomoathens/fmgcf-ewc"
+abstract: >-
+  Runnable, tested early warning chain developed from the FMGCF-EWC, MVI-HGP
+  and FairGLA frameworks of Blueprints for Future Living (Springer, 2027). It
+  combines a cross-border regional graph, federated learning across countries
+  with optional client-level differential privacy, a Gaussian-process
+  vulnerability index, warnings whose threshold depends on regional
+  vulnerability, fairness focused on missed warnings, and verification scores
+  with bootstrap confidence intervals. It is evaluated on synthetic data and on
+  weekly mortality (Eurostat) and temperature (Open-Meteo) data for the NUTS 2
+  regions of Greece, Italy, Spain and Portugal.
+keywords:
+  - early warning systems
+  - climate and health
+  - heat-related mortality
+  - federated learning
+  - differential privacy
+  - vulnerability index
+  - Gaussian process
+  - algorithmic fairness
+  - graph learning
+  - Eurostat
+license: MIT
+references:
+  - type: book
+    title: "Blueprints for Future Living: AI-Driven Urban Innovation and Resilient Cities"
+    authors:
+      - family-names: Sargiotis
+        given-names: Dimitrios
+        orcid: "https://orcid.org/0009-0006-3644-4561"
+    publisher:
+      name: "Springer Nature Switzerland"
+    collection-title: "AI and the Intelligent City: Data-Driven Innovations for Urban Transformation"
+    year: 2027
+    doi: "10.1007/978-3-032-24178-8"
+    isbn: "978-3-032-24178-8"

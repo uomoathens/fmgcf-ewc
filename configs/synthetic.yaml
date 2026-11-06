@@ -1,0 +1,40 @@
+data:
+  source: synthetic
+  synthetic:
+    countries: [AA, BB, CC, DD]
+    regions_per_country: 10
+    start_year: 2015
+    end_year: 2025
+    seed: 3
+
+panel:
+  reference_years: [2015, 2016, 2017, 2018, 2019, 2023, 2024, 2025]
+  baseline_window: 1
+  baseline_min_years: 3
+  excess_reporting_lag: 2
+  event_threshold: 0.10
+  season_weeks: [23, 38]
+  train_years: [2015, 2016, 2017, 2018, 2019, 2023]
+  validation_years: [2024]
+  test_years: [2025]
+
+graph:
+  neighbours: 4
+  hops: 1
+
+model:
+  operational: federated_fair
+  rounds: 120
+  local_steps: 5
+  learning_rate: 0.2
+  l2: 0.001
+  miss_weight: 5.0
+  clip: 1.0
+  noise_multiplier: 1.0
+  delta: 0.00001
+  seed: 0
+
+alerts:
+  cost_ratio: 4.0
+  fairness_group: low_income
+  bootstrap_samples: 300

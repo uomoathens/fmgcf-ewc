@@ -1,0 +1,35 @@
+{
+  "upload_type": "software",
+  "title": "FMGCF-EWC: an operational, vulnerability-aware early warning chain for climate-related health risk",
+  "version": "1.0.0",
+  "language": "eng",
+  "license": "MIT",
+  "description": "<p>Runnable, tested early warning chain developed from the FMGCF-EWC, MVI-HGP and FairGLA frameworks of <em>Blueprints for Future Living: AI-Driven Urban Innovation and Resilient Cities</em> (Springer Nature, 2027), Chapter 6.</p><p>It combines a cross-border regional graph, federated learning across countries with optional client-level differential privacy, a Gaussian-process vulnerability index, warnings whose threshold depends on regional vulnerability, fairness focused on missed warnings, and verification scores with bootstrap confidence intervals. It is evaluated on synthetic data and on weekly mortality (Eurostat) and temperature (Open-Meteo) data for the NUTS 2 regions of Greece, Italy, Spain and Portugal.</p>",
+  "creators": [
+    {
+      "name": "Sargiotis, Dimitrios",
+      "affiliation": "School of Civil Engineering, National Technical University of Athens",
+      "orcid": "0009-0006-3644-4561"
+    }
+  ],
+  "keywords": [
+    "early warning systems",
+    "climate and health",
+    "heat-related mortality",
+    "federated learning",
+    "differential privacy",
+    "vulnerability index",
+    "Gaussian process",
+    "algorithmic fairness",
+    "graph learning",
+    "Eurostat"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "10.1007/978-3-032-24178-8",
+      "relation": "isSupplementTo",
+      "resource_type": "publication-book",
+      "scheme": "doi"
+    }
+  ]
+}
