@@ -19,6 +19,12 @@ into one runnable early warning chain, tested on real European data:
 
 The book sets out the architecture and its mathematical core: graph-based warning scores over regional nodes, federated aggregation across jurisdictions, a Gaussian-process vulnerability index with a Matérn 3/2 kernel, and fairness-aware learning with bias auditing. Building on that foundation, this repository joins the three frameworks into a single decision chain and extends them in four operational directions, described below.
 
+## Why it matters
+
+Early warning systems save lives: disaster mortality is nearly six times lower in countries with comprehensive multi-hazard early warning systems than in countries with limited capabilities. The UN Early Warnings for All initiative aims to protect every person on Earth by an early warning system by 2027, yet 60% of countries report having a multi-hazard system and fewer than a third report capabilities for risk knowledge, the understanding of who is exposed and why, on which every other component depends ([WMO and UNDRR, 2025](https://wmo.int/news/media-centre/early-warning-systems-reach-new-heights-critical-gaps-jeopardize-global-progress)). Heat is a direct and growing threat in Southern Europe: an estimated 24,400 heat-related deaths occurred in 854 European cities in summer 2025, around 68% of them attributable to climate change, with Rome and Athens among the most affected capitals ([LSHTM and Imperial College London, 2025](https://www.lshtm.ac.uk/newsevents/news/2025/climate-change-driven-summer-heat-caused-16500-additional-deaths-across-europe)).
+
+This chain addresses that gap in three ways: it places vulnerability at the centre of the decision to warn, so that the communities most at risk are warned first; it lets countries learn together without exchanging health data; and it measures, with confidence intervals, whether warnings actually reach the most vulnerable. Results on real data are produced by the workflow and will be reported here once reviewed.
+
 ## What it does
 
 For every week of the warm season (ISO weeks 23 to 38) and every NUTS 2 region, the chain estimates the probability that deaths in the coming week will exceed the expected level by at least 10%, decides whether to issue a warning, and evaluates the warnings against what actually happened.
