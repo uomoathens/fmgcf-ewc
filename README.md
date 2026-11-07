@@ -100,14 +100,32 @@ The first run on real data used an earlier configuration of the chain: expected 
 
 1. **A vulnerability index learned from past mortality can anchor warnings to yesterday's risk.** With geographic inputs, the index placed every Greek region in the most vulnerable third and 14 of the 16 Spanish regions in the least vulnerable third, reflecting where heat-related excess mortality had been observed in the training years. Full weighting raised detection in the regions it ranked most vulnerable by 0.317 (95% CI 0.155 to 0.442), but moved warnings away from the Iberian Peninsula, where the 2025 heat struck hardest, and lowered overall detection from 0.583 to 0.331. The index now separates country effects from regional vulnerability, and weighting is applied only when it does not reduce overall detection on the validation year. Replayed on the 2025 predictions of that run, the no-harm rule would have kept the single threshold.
 2. **Ageing populations inflate excess mortality measured against a flat baseline.** The share of event weeks rose from 13% in the training years to 31% in 2024, a drift consistent with a baseline that ignores the upward trend in deaths. Expected deaths now follow a regional linear trend.
-3. **Regional boundaries change.** Three Portuguese regions had no 2025 series under their NUTS 2021 codes after the NUTS 2024 revision. The chain now chooses, for each country, the NUTS version with complete series.
+3. **Regional boundaries change.** Three Portuguese regions had no 2025 series under their NUTS 2021 codes after the NUTS 2024 revision. The chain now chooses, for each country, the NUTS version with the most complete series and records the choice.
 
-Results of the present version on real data are produced by the GitHub workflow and will be reported here once reviewed.
+### Present version
+
+The present version was run on the same four countries, with 57 regions retrieved and 52 regions carrying complete weekly series for training, validation (2024) and test (2025). The changes behave as intended, and the run leads to a clear operational conclusion.
+
+| | First run | Present version |
+|---|---|---|
+| Test AUC, operational model | 0.654 | 0.728 |
+| Event rate, training / 2024 / 2025 | 13% / 31% / 20% | 16% / 27% / 12% |
+| Greek regions in the most vulnerable third | 13 of 13 | 7 of 13 |
+| Spanish regions in the least vulnerable third | 14 of 16 | 5 of 16 |
+| Selected vulnerability weighting | full, without validation | none ($`\alpha = 0`$) |
+
+- **The trend baseline reduces the drift.** The share of event weeks in 2024 remains above the training years, which is consistent with the hot summer of 2024, but the gap is smaller, and 2025 now lies below the training rate. The 100 events of 2025 are spread across Spain (40), Italy (38), Greece (14) and Portugal (8).
+- **The vulnerability index is no longer a country proxy.** The estimated country effects are small (between −0.007 and +0.005 on the heat-sensitivity scale), and every country has regions in all three vulnerability thirds. The index ranks regions within countries by age structure and income.
+- **Vulnerability weighting moves detection rather than adding it.** With the index corrected, full weighting still raised detection in the most vulnerable third, from 0.533 to 0.733 (gain 0.200, 95% CI 0.082 to 0.348), but detection in the least vulnerable third fell from 0.556 to 0.139, and overall detection changed by −0.099 (95% CI −0.207 to 0.018). On the validation year every positive $`\alpha`$ lowered overall detection, so the no-harm rule kept the single threshold. With $`\alpha = 0`$, the chain detected 61 of the 100 events in 2025 (probability of detection 0.610, 95% CI 0.516 to 0.699) with a false alarm ratio of 0.745, the latter reflecting a cost ratio that treats a missed event as four times as costly as a false alarm.
+- **Federated training costs nothing in accuracy here.** The federated model with the fairness penalty (test AUC 0.728) matched the centralised model (0.721). Client-level differential privacy lowered the test AUC to 0.677 at $`\varepsilon \approx 41`$, a weak formal guarantee with four clients; meaningful privacy would require many more participating authorities.
+
+In operational terms, vulnerability weighting is a policy choice with an explicit price in this setting: protecting the most vulnerable regions more strongly costs detection elsewhere, and the chain reports that price instead of applying the weighting by default. An authority that accepts the trade-off can set the tolerance in the configuration; the report gives the expected gains and losses for each $`\alpha`$ on the validation year.
 
 ## Limitations
 
 - The observed temperature of the target week stands in for a one-week-ahead forecast, so the measured skill is an upper bound on what an operational forecast would deliver.
 - Excess mortality is used with a two-week reporting lag; national systems may report faster or slower.
+- Eurostat publishes the new Portuguese NUTS 2024 regions only for recent years, and the former NUTS 2021 codes stop before 2025, so only two Portuguese regions (Norte and Algarve) have series long enough for training. Harmonising the series across the boundary revision would restore the rest of Portugal.
 - Temperature is taken at one label point per region, which may not represent where people live in large or mountainous regions.
 - Results describe association, not cause: weekly excess deaths in summer have causes other than heat.
 - The chain supports, and does not replace, the judgement of public health authorities.
