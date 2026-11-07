@@ -54,7 +54,7 @@ To isolate the effect of where warnings go from how many are issued, it is compa
 **3. Client-level differential privacy on top of federated averaging.** The book's federated aggregation keeps raw data in each country and gives each participating country an equal voice. The chain keeps equal weighting and adds an optional differentially private variant, with each country's update clipped and perturbed before aggregation and the privacy cost accounted in zero-concentrated differential privacy:
 
 ```math
-\theta^{t+1} = \theta^{t} + \frac{1}{|\mathcal{N}|} \sum_{i \in \mathcal{N}} \left( \operatorname{clip}\left(\Delta_i, C\right) + \mathcal{N}\left(0, \sigma^{2} C^{2} I\right) \right), \qquad \rho = \frac{T}{2|\mathcal{N}|\sigma^{2}}, \qquad \varepsilon = \rho + 2\sqrt{\rho \ln(1/\delta)}
+\theta^{t+1} = \theta^{t} + \frac{1}{|\mathcal{N}|} \sum_{i \in \mathcal{N}} \left( \mathrm{clip}\left(\Delta_i, C\right) + \mathcal{N}\left(0, \sigma^{2} C^{2} I\right) \right), \qquad \rho = \frac{T}{2|\mathcal{N}|\sigma^{2}}, \qquad \varepsilon = \rho + 2\sqrt{\rho \ln(1/\delta)}
 ```
 
 **4. An evaluation layer.** Every run reports the standard verification scores of warning systems, overall, by vulnerability tercile and by fairness group, with 95% confidence intervals from resampling regions:
