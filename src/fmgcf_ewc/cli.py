@@ -21,17 +21,18 @@ def main(argv=None):
     result = run(config)
     output = Path(arguments.output)
     report = write_excel(result, output / "early_warning_report.xlsx")
-    performance = result.performance.set_index("strategy")
+    performance = result.performance.reset_index(drop=True)
     print(
         json.dumps(
             {
                 "report": str(report),
                 "regions": int(result.vulnerability["region"].nunique()),
-                "test_events": int(performance.iloc[0]["events"]),
-                "pod_uniform": performance.iloc[0]["probability_of_detection"],
-                "pod_vulnerability_aware": performance.iloc[1]["probability_of_detection"],
-                "far_uniform": performance.iloc[0]["false_alarm_ratio"],
-                "far_vulnerability_aware": performance.iloc[1]["false_alarm_ratio"],
+                "test_events": int(performance.loc[0, "events"]),
+                "selected_alpha": result.thresholds["alpha"],
+                "strategies": {
+                    row.strategy: {"pod": row.probability_of_detection, "far": row.false_alarm_ratio, "alerts": int(row.alerts)}
+                    for row in performance.itertuples()
+                },
             },
             indent=2,
             default=float,

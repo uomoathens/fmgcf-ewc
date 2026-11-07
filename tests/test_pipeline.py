@@ -11,7 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 SHEETS = [
     "Summary",
     "Alert performance",
-    "Vulnerability-aware gain",
+    "Vulnerability weighting",
+    "Weighting vs uniform",
     "By vulnerability tercile",
     "By fairness group",
     "Models",
@@ -40,12 +41,14 @@ def test_synthetic_run_produces_report_and_summary(tmp_path, capsys):
     assert main(["run", "--config", str(config), "--output", str(tmp_path / "out"), "--summary", str(summary)]) == 0
     output = json.loads(capsys.readouterr().out)
     assert output["regions"] == 24
-    assert 0 <= output["pod_vulnerability_aware"] <= 1
+    assert len(output["strategies"]) == 3
+    assert output["selected_alpha"] in (0.0, 0.25, 0.5, 0.75, 1.0)
     workbook = load_workbook(tmp_path / "out" / "early_warning_report.xlsx")
     assert workbook.sheetnames == SHEETS
     assert workbook["Models"].max_row == 5
     text = summary.read_text(encoding="utf-8")
-    assert "vulnerability-aware threshold" in text
+    assert "uniform threshold" in text
+    assert "Selected vulnerability weighting" in text
     assert "Differential privacy" in text
 
 

@@ -6,6 +6,52 @@ def vulnerability_thresholds(mvi, cost_ratio):
     return 1.0 / (1.0 + cost_ratio * np.asarray(mvi, dtype=float))
 
 
+def modulated_thresholds(mvi, cost_ratio, alpha, centre):
+    weight = centre + float(alpha) * (np.asarray(mvi, dtype=float) - centre)
+    return 1.0 / (1.0 + cost_ratio * weight)
+
+
+def shift_for_volume(probabilities, thresholds, target_alerts):
+    margins = np.asarray(probabilities) - np.asarray(thresholds)
+    return matched_uniform_threshold(margins, target_alerts)
+
+
+def apply(probabilities, thresholds, shift):
+    return ((np.asarray(probabilities) - np.asarray(thresholds)) >= shift).astype(int)
+
+
+def select_alpha(frame, alphas, cost_ratio, centre, target_alerts, tolerance):
+    rows = []
+    for alpha in alphas:
+        thresholds = modulated_thresholds(frame["mvi"], cost_ratio, alpha, centre)
+        shift = shift_for_volume(frame["probability"], thresholds, target_alerts)
+        alerts = apply(frame["probability"], thresholds, shift)
+        overall = scores(alerts, frame["event"])
+        high = frame["mvi_tercile"] == "high"
+        high_scores = scores(alerts[high.to_numpy()], frame.loc[high, "event"])
+        rows.append(
+            {
+                "alpha": float(alpha),
+                "shift": shift,
+                "validation_alerts": overall["alerts"],
+                "validation_pod_all": overall["probability_of_detection"],
+                "validation_far_all": overall["false_alarm_ratio"],
+                "validation_pod_high_vulnerability": high_scores["probability_of_detection"],
+            }
+        )
+    table = pd.DataFrame(rows)
+    reference = table.loc[table["alpha"] == 0.0, "validation_pod_all"].iloc[0]
+    allowed = table[table["validation_pod_all"] >= reference - tolerance]
+    best = allowed.sort_values(["validation_pod_high_vulnerability", "alpha"], ascending=[False, True]).iloc[0]
+    table["selected"] = table["alpha"] == best["alpha"]
+    table["passes_no_harm_check"] = table["validation_pod_all"] >= reference - tolerance
+    if best["alpha"] == 0.0:
+        reason = "no vulnerability weighting improved detection in high-vulnerability regions without lowering overall detection on validation; uniform threshold kept"
+    else:
+        reason = f"largest gain in high-vulnerability detection on validation among weightings that do not lower overall detection (tolerance {tolerance})"
+    return float(best["alpha"]), float(best["shift"]), table, reason
+
+
 def matched_uniform_threshold(probabilities, target_alerts):
     ordered = np.sort(np.asarray(probabilities))[::-1]
     if target_alerts <= 0:

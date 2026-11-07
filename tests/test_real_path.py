@@ -88,7 +88,7 @@ def test_real_data_path_runs_end_to_end_on_simulated_responses(monkeypatch, tmp_
     assert "IT07" not in set(result.vulnerability["region"])
     assert set(result.vulnerability["region"]) == {f"EL{i:02d}" for i in range(1, 8)} | {f"IT{i:02d}" for i in range(1, 7)}
     assert result.vulnerability["share65"].notna().all() and result.vulnerability["gdp_pps"].notna().all()
-    assert sorted(result.vulnerability_info["covariates_used"]) == ["gdp_pps", "lat", "lon", "share65"]
+    assert result.vulnerability_info["covariates_used"] == ["share65", "gdp_pps"]
     assert any("PPS_EU27_2020_HAB" in url for url in calls)
     assert any("PC_Y65_MAX" in url for url in calls)
     assert len(result.test_alerts) > 0

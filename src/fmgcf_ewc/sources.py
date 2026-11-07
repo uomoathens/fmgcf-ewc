@@ -12,7 +12,7 @@ from .jsonstat import to_frame
 
 EUROSTAT = "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/"
 OPEN_METEO = "https://archive-api.open-meteo.com/v1/archive"
-NUTS_POINTS = "https://raw.githubusercontent.com/eurostat/Nuts2json/master/pub/v2/2021/4326/nutspt_{level}.json"
+NUTS_POINTS = "https://raw.githubusercontent.com/eurostat/Nuts2json/master/pub/v2/{version}/4326/nutspt_{level}.json"
 USER_AGENT = "fmgcf-ewc research software (https://github.com/uomoathens/fmgcf-ewc)"
 
 
@@ -60,8 +60,8 @@ def eurostat(code, filters, cache):
     return to_frame(fetch_json(url, cache, key))
 
 
-def nuts_points(level, countries, cache):
-    payload = fetch_json(NUTS_POINTS.format(level=level), cache, f"nuts_points_{level}")
+def nuts_points(level, countries, cache, version=2021):
+    payload = fetch_json(NUTS_POINTS.format(level=level, version=version), cache, f"nuts_points_{version}_{level}")
     rows = []
     for feature in payload["features"]:
         code = feature["properties"]["id"]
@@ -156,15 +156,60 @@ def daily_tmax(points, start, end, cache):
     return pd.concat(frames, ignore_index=True)
 
 
-def load_real(config, cache):
+def _complete_regions(deaths, required_years):
+    if deaths.empty:
+        return set()
+    years = deaths.groupby("region")["iso_year"].apply(set)
+    return {region for region, present in years.items() if set(required_years) <= present}
+
+
+def _country_series(country, versions, exclude, since, required_years, cache, log):
+    best = None
+    seen = []
+    for version in versions:
+        regions = nuts_points(2, [country], cache, version)
+        regions = regions[~regions["region"].isin(exclude)].reset_index(drop=True)
+        codes = tuple(sorted(regions["region"]))
+        if not codes or codes in seen:
+            continue
+        seen.append(codes)
+        level3 = nuts_points(3, [country], cache, version)
+        children = {code: sorted(level3.loc[level3["region"].str[:4] == code, "region"]) for code in codes}
+        attempt = []
+        try:
+            deaths = weekly_deaths(list(codes), children, since, cache, attempt)
+        except SourceError:
+            deaths = pd.DataFrame(columns=["region", "iso_year", "iso_week", "deaths"])
+        complete = _complete_regions(deaths, required_years)
+        log.append({"country": country, "nuts_version": version, "regions": len(codes), "regions_complete": len(complete)})
+        if best is None or len(complete) >= best[0]:
+            best = (len(complete), version, regions, deaths, attempt)
+    if best is None:
+        return None
+    _, version, regions, deaths, attempt = best
+    log.extend(attempt)
+    log.append({"country": country, "nuts_version_selected": version})
+    regions = regions.assign(nuts_version=version)
+    return regions, deaths
+
+
+def load_real(config, cache, required_years=()):
     countries = list(config["countries"])
-    log = []
-    regions = nuts_points(2, countries, cache)
+    versions = list(config.get("nuts_versions", [2021]))
     exclude = set(config.get("exclude_regions", []))
-    regions = regions[~regions["region"].isin(exclude)].reset_index(drop=True)
-    level3 = nuts_points(3, countries, cache)
-    children = {code: sorted(level3.loc[level3["region"].str[:4] == code, "region"]) for code in regions["region"]}
-    deaths = weekly_deaths(list(regions["region"]), children, config["since"], cache, log)
+    log = []
+    region_frames = []
+    death_frames = []
+    for country in countries:
+        found = _country_series(country, versions, exclude, config["since"], required_years, cache, log)
+        if found is None:
+            continue
+        region_frames.append(found[0])
+        death_frames.append(found[1])
+    if not death_frames:
+        raise SourceError("no weekly deaths could be retrieved")
+    regions = pd.concat(region_frames, ignore_index=True)
+    deaths = pd.concat(death_frames, ignore_index=True)
     regions = regions[regions["region"].isin(deaths["region"].unique())].reset_index(drop=True)
     share65 = latest_value("demo_r_pjanind2", {"indic_de": "PC_Y65_MAX"}, list(regions["region"]), "share65", cache, log)
     gdp = latest_value("nama_10r_2gdp", {"unit": "PPS_EU27_2020_HAB"}, list(regions["region"]), "gdp_pps", cache, log)

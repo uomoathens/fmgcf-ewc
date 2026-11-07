@@ -9,7 +9,22 @@ def weekly_temperature(temps):
     return pd.DataFrame({"tmax_mean": grouped.mean(), "tmax_peak": grouped.max()}).reset_index()
 
 
-def expected_deaths(deaths, reference_years, window=1, min_years=3):
+def _trend_prediction(values, years, target):
+    mask = ~np.isnan(values)
+    x = np.where(mask, years[None, :] - target, 0.0)
+    y = np.where(mask, values, 0.0)
+    n = mask.sum(axis=1)
+    sx = x.sum(axis=1)
+    sy = y.sum(axis=1)
+    sxx = (x * x).sum(axis=1)
+    sxy = (x * y).sum(axis=1)
+    denominator = n * sxx - sx ** 2
+    slope = np.divide(n * sxy - sx * sy, denominator, out=np.zeros(len(n)), where=denominator > 0)
+    intercept = np.divide(sy - slope * sx, n, out=np.full(len(n), np.nan), where=n > 0)
+    return intercept, n
+
+
+def expected_deaths(deaths, reference_years, window=1, min_years=3, method="trend"):
     frame = deaths.sort_values(["region", "iso_year", "iso_week"]).copy()
     frame["smoothed"] = frame.groupby(["region", "iso_year"])["deaths"].transform(
         lambda series: series.rolling(2 * window + 1, center=True, min_periods=1).mean()
@@ -19,10 +34,17 @@ def expected_deaths(deaths, reference_years, window=1, min_years=3):
     expected = []
     for year in sorted(frame["iso_year"].unique()):
         usable = [y for y in reference if y != year]
-        block = pivot[usable] if usable else pd.DataFrame(index=pivot.index)
-        counts = block.notna().sum(axis=1)
-        mean = block.mean(axis=1).where(counts >= min_years)
-        expected.append(pd.DataFrame({"region": mean.index.get_level_values(0), "iso_week": mean.index.get_level_values(1), "iso_year": year, "expected": mean.values}))
+        if usable:
+            values = pivot[usable].to_numpy(dtype=float)
+            if method == "trend":
+                estimate, counts = _trend_prediction(values, np.asarray(usable, dtype=float), float(year))
+            else:
+                counts = (~np.isnan(values)).sum(axis=1)
+                estimate = np.divide(np.nansum(values, axis=1), counts, out=np.full(len(counts), np.nan), where=counts > 0)
+            estimate = np.where(counts >= min_years, estimate, np.nan)
+        else:
+            estimate = np.full(len(pivot), np.nan)
+        expected.append(pd.DataFrame({"region": pivot.index.get_level_values(0), "iso_week": pivot.index.get_level_values(1), "iso_year": year, "expected": estimate}))
     expected = pd.concat(expected, ignore_index=True)
     merged = frame.drop(columns="smoothed").merge(expected, on=["region", "iso_year", "iso_week"], how="left")
     merged["excess"] = merged["deaths"] / merged["expected"] - 1.0
@@ -30,7 +52,14 @@ def expected_deaths(deaths, reference_years, window=1, min_years=3):
 
 
 def build_panel(raw, config):
-    deaths = expected_deaths(raw["deaths"], config["reference_years"], config.get("baseline_window", 1), config.get("baseline_min_years", 3))
+    held_out = set(config["test_years"])
+    deaths = expected_deaths(
+        raw["deaths"],
+        [year for year in config["reference_years"] if year not in held_out],
+        config.get("baseline_window", 1),
+        config.get("baseline_min_years", 3),
+        config.get("baseline_method", "trend"),
+    )
     temps = weekly_temperature(raw["temps"])
     panel = deaths.merge(temps, on=["region", "iso_year", "iso_week"], how="inner")
     train_years = set(config["train_years"])

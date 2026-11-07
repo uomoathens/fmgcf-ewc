@@ -89,3 +89,46 @@ def test_daily_temperatures_are_parsed(tmp_path, monkeypatch):
     frame = sources.daily_tmax(points, "2025-07-01", "2025-07-02", tmp_path)
     assert frame["tmax"].iloc[0] == pytest.approx(36.1)
     assert np.isnan(frame["tmax"].iloc[1])
+
+
+def test_nuts_version_with_complete_series_is_selected(tmp_path, monkeypatch):
+    codes = {2021: ["PT11", "PT16", "PT17"], 2024: ["PT11", "PT19", "PT1A", "PT1D"]}
+
+    def points(level, countries, cache, version=2021):
+        rows = [{"region": code if level == 2 else code + "1", "name": code, "country": "PT", "lat": 39.0, "lon": -8.0} for code in codes[version]]
+        return pd.DataFrame(rows)
+
+    def deaths(regions, children, since, cache, log):
+        rows = []
+        for region in regions:
+            years = [2023, 2024, 2025] if region in ("PT11", "PT19", "PT1A", "PT1D") else [2023, 2024]
+            for year in years:
+                rows.append({"region": region, "iso_year": year, "iso_week": 30, "deaths": 100.0})
+            log.append({"region": region, "deaths_source": "NUTS 2 series"})
+        return pd.DataFrame(rows)
+
+    monkeypatch.setattr(sources, "nuts_points", points)
+    monkeypatch.setattr(sources, "weekly_deaths", deaths)
+    log = []
+    regions, frame = sources._country_series("PT", [2021, 2024], set(), "2023-W01", [2023, 2024, 2025], tmp_path, log)
+    assert sorted(regions["region"]) == ["PT11", "PT19", "PT1A", "PT1D"]
+    assert set(regions["nuts_version"]) == {2024}
+    assert {"country": "PT", "nuts_version_selected": 2024} in log
+    assert {"country": "PT", "nuts_version": 2021, "regions": 3, "regions_complete": 1} in log
+
+
+def test_unchanged_nuts_codes_are_fetched_once(tmp_path, monkeypatch):
+    calls = []
+
+    def points(level, countries, cache, version=2021):
+        return pd.DataFrame([{"region": "EL30" if level == 2 else "EL301", "name": "Attiki", "country": "EL", "lat": 38.0, "lon": 23.7}])
+
+    def deaths(regions, children, since, cache, log):
+        calls.append(tuple(regions))
+        return pd.DataFrame([{"region": "EL30", "iso_year": 2025, "iso_week": 30, "deaths": 100.0}])
+
+    monkeypatch.setattr(sources, "nuts_points", points)
+    monkeypatch.setattr(sources, "weekly_deaths", deaths)
+    regions, _ = sources._country_series("EL", [2021, 2024], set(), "2025-W01", [2025], tmp_path, [])
+    assert calls == [("EL30",)]
+    assert set(regions["nuts_version"]) == {2021}
