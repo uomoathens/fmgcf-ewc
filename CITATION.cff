@@ -3,7 +3,8 @@ message: "If you use this software, please cite it using the metadata below, tog
 title: "FMGCF-EWC: an operational, vulnerability-aware early warning chain for climate-related health risk"
 type: software
 version: "1.0.0"
-date-released: "2026-11-06"
+date-released: "2026-11-07"
+doi: "10.5281/zenodo.24031500"
 authors:
   - family-names: Sargiotis
     given-names: Dimitrios

@@ -1,6 +1,6 @@
 # FMGCF-EWC: an operational, vulnerability-aware early warning chain for climate-related health risk
 
-[![CI](../../actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24031500.svg)](https://doi.org/10.5281/zenodo.24031500) [![CI](../../actions/workflows/ci.yml/badge.svg)](../../actions/workflows/ci.yml)
 [![Early warning run](../../actions/workflows/early-warning.yml/badge.svg)](../../actions/workflows/early-warning.yml)
 
 **Dimitrios Sargiotis** · School of Civil Engineering, National Technical University of Athens · [ORCID 0009-0006-3644-4561](https://orcid.org/0009-0006-3644-4561) · [users.ntua.gr/dims](https://users.ntua.gr/dims/)
@@ -138,7 +138,7 @@ Mortality, population and economic data: © European Union, Eurostat; reuse is a
 
 Please cite both the software and the book; GitHub's **Cite this repository** button reads `CITATION.cff`.
 
-> Sargiotis, D. (2026). *FMGCF-EWC: an operational, vulnerability-aware early warning chain for climate-related health risk* (Version 1.0.0) [Computer software]. https://github.com/uomoathens/fmgcf-ewc
+> Sargiotis, D. (2026). *FMGCF-EWC: an operational, vulnerability-aware early warning chain for climate-related health risk* (Version 1.0.0) [Computer software]. Zenodo. https://doi.org/10.5281/zenodo.24031500
 
 > Sargiotis, D. (2027). *Blueprints for Future Living: AI-Driven Urban Innovation and Resilient Cities*. Springer Nature Switzerland. https://doi.org/10.1007/978-3-032-24178-8
 
